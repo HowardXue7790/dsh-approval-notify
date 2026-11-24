@@ -37,7 +37,7 @@ The browser half is `client.js`. It stores nothing of its own: reads and writes 
 3. Toast buttons use `activationType="protocol"`, so Windows launches `dsh-approval-notify://127.0.0.1:<port>/a?v=allow|deny&t=<token>`.
 4. `HKCU\Software\Classes\dsh-approval-notify\shell\open\command` points at the bundled `answer.vbs`, which silently GETs the plugin's loopback server (random port, per-request random token). The VBS only forwards targets starting with `//127.0.0.1:`.
 5. The registry entry lives in `HKCU` (current user only) and is removed when the plugin stops; tokens are single use, so stale buttons do nothing.
-6. The model's sentence is also written into `request.displayReason`, so the in-page card headlines it too; the original stays in `reason` and the browser half shows it as small print on that card (no rewrite, no takeover — the built-in card stays).
+6. The model's sentence is also written into `request.displayReason`, so the default in-page card headlines it too (that card has one body slot, so the original is not shown separately).
 
 ## Troubleshooting
 

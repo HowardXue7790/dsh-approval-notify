@@ -41,10 +41,6 @@ window.__ModuleLoader__.load({
       loading: '正在读取设置…',
       unavailable: '设置暂不可用（Host 端未加载本插件）',
       readonly: '当前设置文档只读',
-      approvalWaiting: '等待你授权',
-      approvalOriginal: '原文：',
-      reject: '拒绝',
-      allowOnce: '允许本次',
     }
     const en = {
       nav: 'Approval notifications',
@@ -75,10 +71,6 @@ window.__ModuleLoader__.load({
       loading: 'Loading settings…',
       unavailable: 'Settings unavailable (host plugin not loaded)',
       readonly: 'This settings document is read-only',
-      approvalWaiting: 'Waiting for your approval',
-      approvalOriginal: 'Original: ',
-      reject: 'Deny',
-      allowOnce: 'Allow once',
     }
 
     // 内置提示词（与 index.js 的 SYSTEM_ZH / SYSTEM_EN 一致，只用于在设置页预填显示）
@@ -272,69 +264,6 @@ window.__ModuleLoader__.load({
       }
     }
 
-    // 审批卡片接管：宿主半体在模型译出正文后会写进 request.displayReason，
-    // 内置卡片只显示它（原文就没地方放了）。所以只有在「有译文 + 有原文」时
-    // 才用我们的卡片替换内置那张：译文做大字、原文做小字，其余情况一律返回
-    // null 让内置卡片照旧（不改动的路径不承担风险）。
-    const pickApproval = ({ pendingInteraction }) => {
-      try {
-        if (!pendingInteraction || pendingInteraction.kind !== 'approval') return null
-        const { reason, displayReason } = pendingInteraction
-        if (typeof reason !== 'string' || !displayReason) return null
-        const shown = displayReason.zh || displayReason.en
-        if (typeof shown !== 'string' || !shown || shown === reason) return null
-        return pendingInteraction
-      } catch {
-        return null
-      }
-    }
-
-    function createApprovalCard(t) {
-      const card = {
-        border: '1px solid rgba(128,128,128,0.35)', borderRadius: 10,
-        padding: '10px 12px', margin: '4px 0', outline: 'none',
-      }
-      const button = {
-        font: 'inherit', fontSize: 13, padding: '5px 12px', borderRadius: 6,
-        border: '1px solid rgba(128,128,128,0.45)', background: 'transparent',
-        color: 'inherit', cursor: 'pointer',
-      }
-      return function ApprovalCard(props) {
-        const approval = props.matched
-        const [busy, setBusy] = React.useState(false)
-        const shown = approval.displayReason.zh || approval.displayReason.en
-        const canAnswer = () => !busy && approval.answerable !== false
-        const answer = outcome => {
-          if (!canAnswer()) return
-          setBusy(true)
-          Promise.resolve(approval.answer(outcome)).catch(() => setBusy(false))
-        }
-        // 内置卡片会把工具调用明细渲染在这个子槽里，接管时照旧带出来，别丢。
-        const detail = approval.callId !== undefined && typeof props.renderSlot === 'function'
-          ? props.renderSlot('conversation.approval.detail', { callId: approval.callId })
-          : null
-        return h('div', {
-          style: card,
-          tabIndex: 0,
-          'aria-busy': busy,
-          onKeyDown: event => {
-            if (event.key !== 'Enter' && event.key !== 'Escape') return
-            event.preventDefault()
-            answer(event.key === 'Enter' ? 'allowed-once' : 'rejected')
-          },
-        },
-          h('div', { style: { fontSize: 12, opacity: 0.6, marginBottom: 6 } }, t('approvalWaiting')),
-          h('div', { style: { fontSize: 14, lineHeight: '21px' } }, shown),
-          h('div', {
-            style: { fontSize: 12, lineHeight: '18px', opacity: 0.55, marginTop: 6, whiteSpace: 'pre-wrap' },
-          }, t('approvalOriginal') + approval.reason),
-          detail ? h('div', { style: { marginTop: 8 } }, detail) : null,
-          h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10 } },
-            h('button', { type: 'button', style: button, disabled: busy, onClick: () => answer('rejected') }, t('reject')),
-            h('button', { type: 'button', style: button, disabled: busy, onClick: () => answer('allowed-once') }, t('allowOnce'))))
-      }
-    }
-
     return {
       // remote.session 是带点的独立服务名，动态半体的守卫要求写进 inject 才让读。
       inject: ['slots', 'locale', 'configForms', 'remote.session'],
@@ -356,13 +285,6 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('plugins.bundle.config', mount('plugins.bundle.config', {
           key: 'dsh-approval-notify',
         }))
-        // priority 0.5：链式槽按升序试，内置审批卡片是 1，排在它前面才轮得到我们。
-        ctx.slots.inject('conversation.composer', () => ctx.slots.register({
-          name: 'conversation.composer',
-          priority: 0.5,
-          locale: NS,
-          select: pickApproval,
-        }, createApprovalCard(t)))
       },
     }
   },
