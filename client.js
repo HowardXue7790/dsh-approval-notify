@@ -3,7 +3,7 @@
 // 「设置 → 审批通知」和「插件 → 已安装插件 → 本插件」两处。
 // 读写全部走 DSH 自己的 configForms（= 插件 Config 的那份设置文档），不另存状态。
 window.__ModuleLoader__.load({
-  id: '@local/approval-notify',
+  id: 'dsh-approval-notify',
   factory(require) {
     const React = require('react')
     const h = React.createElement
@@ -283,7 +283,7 @@ window.__ModuleLoader__.load({
           id: 'approval-notify', order: 63, label: () => t('nav'),
         }))
         ctx.slots.inject('plugins.bundle.config', mount('plugins.bundle.config', {
-          key: '@local/approval-notify',
+          key: 'dsh-approval-notify',
         }))
       },
     }

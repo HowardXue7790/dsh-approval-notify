@@ -61,7 +61,7 @@ assert.equal(tickets.size, 0)
 let registration
 const fakeWindow = { __ModuleLoader__: { load: value => { registration = value } } }
 new Function('window', fs.readFileSync(new URL('./client.js', import.meta.url), 'utf8'))(fakeWindow)
-assert.equal(registration.id, '@local/approval-notify')
+assert.equal(registration.id, 'dsh-approval-notify')
 const React = {
   createElement: (type, props, ...children) => ({ type, props, children }),
   useState: value => [typeof value === 'function' ? value() : value, () => {}],
