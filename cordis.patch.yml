@@ -1,0 +1,11 @@
+# approval-notify — 审批请求直接弹 Windows 通知
+# 只在 Windows 上生效；非 win32 或任何一步失败都会退回 DSH 原来的网页审批卡片。
+# locale: zh | en（通知正文与按钮文案）；waitMs: 无人应答多久后交回网页卡片；
+# focusCheck: 正看着 DSH 窗口时是否跳过通知（默认 true，改用网页卡片）。
+- insert:
+    - id: approval-notify
+      name: dsh-approval-notify
+      config:
+        locale: zh
+        waitMs: 300000
+        focusCheck: true

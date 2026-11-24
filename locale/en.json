@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Approval notifications",
+    "description": "Permission requests also arrive as a Windows notification: the body is rewritten by the model into one plain-language sentence and the toast carries Allow / Deny buttons, so you can decide away from the DSH window. No notification while the DSH window is focused (the normal card is used), and unanswered requests fall back to the card. Windows only.",
+    "detail": "docs/DETAIL.md"
+  }
+}
