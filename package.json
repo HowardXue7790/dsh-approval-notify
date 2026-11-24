@@ -1,6 +1,6 @@
 {
   "name": "dsh-approval-notify",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Windows toast notifications for DSH approval requests, with the reason rewritten by a model into plain language and Allow/Deny buttons on the toast.",
   "type": "module",
   "main": "./index.js",

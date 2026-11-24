@@ -136,6 +136,13 @@ export function apply(ctx, config = {}) {
     let decision
     try {
       const body = await explain(ctx, request, locale, log, { provider: modelProvider, model, reasoningEffort, prompt })
+      // 卡片上也显示白话：内置审批卡片优先渲染 displayReason，原文留在 reason（浏览器半体当小字）。
+      const raw = request.displayReason?.[locale] ?? request.displayReason?.en ?? request.reason
+      if (body && body !== raw) {
+        try {
+          request.displayReason = { ...(request.displayReason || {}), en: body, [locale]: body }
+        } catch {}
+      }
       const uri = vote => `${SCHEME}://127.0.0.1:${port}/a?v=${vote}&t=${token}`
       const shown = await showToast({
         title: locale === 'en' ? 'DSH needs your permission' : 'DSH 需要你授权',

@@ -88,7 +88,8 @@ const ctxFor = storedForm => ({
   },
 })
 client.apply(ctxFor(form))
-assert.deepEqual(registered.map(item => item.options.name).sort(), ['plugins.bundle.config', 'settings.section'])
+const byName = name => registered.find(item => item.options.name === name)
+assert.deepEqual(registered.map(item => item.options.name).sort(), ['conversation.composer', 'plugins.bundle.config', 'settings.section'])
 const tree = registered[0].Component()
 assert.ok(tree && tree.children.length > 0, 'panel must render')
 assert.match(JSON.stringify(tree), /"textarea"/, 'panel must expose the prompt field')
@@ -111,12 +112,32 @@ registered.length = 0
 client.apply(ctxFor(emptyPrompt))
 assert.match(JSON.stringify(registered[0].Component()), /40 个汉字/, 'prompt box must prefill the built-in wording')
 
+// The approval card takeover: only fires with a model rewrite in hand, and shows both texts.
+const composer = byName('conversation.composer')
+assert.equal(composer.options.priority, 0.5, 'must be tried before the built-in approval card at priority 1')
+const pendingApproval = {
+  kind: 'approval',
+  reason: 'Auto review rejected this call: This creates a new key under HKCU',
+  displayReason: { zh: '会在你的注册表里写一个测试项', en: 'writes one test key in your registry' },
+  answerable: true,
+  answer: async () => {},
+}
+assert.equal(composer.options.select({ pendingInteraction: pendingApproval }), pendingApproval)
+assert.equal(composer.options.select({ pendingInteraction: { ...pendingApproval, displayReason: undefined } }), null, 'no rewrite means the built-in card stays')
+assert.equal(composer.options.select({ pendingInteraction: { ...pendingApproval, displayReason: { zh: pendingApproval.reason } } }), null, 'a rewrite equal to the original is not a rewrite')
+assert.equal(composer.options.select({ pendingInteraction: { kind: 'question' } }), null)
+assert.equal(composer.options.select({}), null)
+const card = composer.Component({ matched: pendingApproval })
+const cardText = JSON.stringify(card)
+assert.match(cardText, /会在你的注册表里写一个测试项/, 'card must headline the plain-language rewrite')
+assert.match(cardText, /approvalOriginal.*HKCU/, 'card must keep the original reason as small print')
+
 // A throwing `ctx.remote` must not blank the page: the panel still renders, the catalog just reports failed.
 const ReactWithEffects = { ...React, useEffect: effect => { effect() } }
 const clientWithEffects = registration.factory(() => ReactWithEffects)
 const badCtx = { ...ctxFor(form), get: () => { throw new Error('remote.session is not available') } }
 clientWithEffects.apply(badCtx)
-const badTree = registered[registered.length - 1].Component()
+const badTree = byName('plugins.bundle.config').Component()
 assert.ok(badTree && badTree.children.length > 0, 'panel must render even when the catalog lookup throws')
 
 console.log('ok')

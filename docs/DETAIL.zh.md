@@ -37,6 +37,7 @@
 3. 通知按钮是 `activationType="protocol"`，点击时 Windows 拉起自定义 URI `dsh-approval-notify://127.0.0.1:<port>/a?v=allow|deny&t=<token>`。
 4. 注册项 `HKCU\Software\Classes\dsh-approval-notify\shell\open\command` 指向包内的 `answer.vbs`，它用 `MSXML2.XMLHTTP` 静默 GET 一次本插件的回环 HTTP 服务（随机端口 + 每请求随机 token），拿到的结果就是审批答案。VBS 只放行 `//127.0.0.1:` 开头的目标。
 5. 注册表只在 `HKCU`（当前用户），插件停止/卸载时会删除；token 一次性，旧通知里的按钮点不动已经失效的请求。
+6. 模型译出的那句话同时写进 `request.displayReason`，所以退回到网页卡片时，卡片正文也是这句白话；原文仍在 `reason` 里，由浏览器半体接管那张卡片时作为小字显示（没有译文时不接管，内置卡片照旧）。
 
 ## 排查
 
